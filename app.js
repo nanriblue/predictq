@@ -135,8 +135,19 @@
           <!-- 아고라X 커뮤니티 -->
           <div class="dn__agora">
             <div class="dn__agora-card">
-              <span class="dn__agora-brand">아고라X</span>
+              <div class="dn__agora-head">
+                <span class="dn__agora-chip">커뮤니티</span>
+                <span class="dn__agora-brand">아고라X</span>
+              </div>
               <p class="dn__agora-title">${f.agora.title}</p>
+              <div class="dn__agora-post">
+                <div class="dn__agora-post-top">
+                  <span class="dn__agora-nick">${f.agora.sample.nick}</span>
+                  <span class="dn__agora-pick">${f.agora.sample.pick}</span>
+                </div>
+                <p class="dn__agora-post-text">“${f.agora.sample.text}”</p>
+                <span class="dn__agora-post-like">👍 ${fmt(f.agora.sample.likes)}</span>
+              </div>
               <p class="dn__agora-desc">${f.agora.desc}</p>
               <div class="dn__agora-btns">
                 <button class="cta cta--primary" type="button">의견 쓰기</button>

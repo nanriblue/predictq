@@ -340,11 +340,22 @@ body {
 /* 아고라X 커뮤니티 */
 .dn__agora { margin-bottom: 16px; }
 .dn__agora-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; }
-.dn__agora-brand { display: inline-block; font-size: 11px; font-weight: 800; color: #fff; background: var(--accent); border-radius: 6px; padding: 3px 9px; letter-spacing: 0.3px; }
-.tone--sports .dn__agora-brand { background: var(--high); }
-.tone--legal .dn__agora-brand { background: #8a55d6; }
-.dn__agora-title { font-size: 15px; font-weight: 800; margin: 8px 0 3px; }
-.dn__agora-desc { font-size: 13px; color: var(--ink-2); margin: 0 0 11px; }
+.dn__agora-head { display: flex; align-items: center; gap: 6px; }
+.dn__agora-chip { font-size: 10.5px; font-weight: 800; color: var(--ink-2); background: #f1f4f9; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.dn__agora-brand { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: 0.3px; }
+.tone--sports .dn__agora-brand { color: var(--high); }
+.tone--legal .dn__agora-brand { color: #8a55d6; }
+.dn__agora-title { font-size: 15px; font-weight: 800; margin: 9px 0 10px; }
+/* 예시 커뮤니티 글 */
+.dn__agora-post { background: #fafbfe; border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; margin-bottom: 10px; }
+.dn__agora-post-top { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.dn__agora-nick { font-size: 12.5px; font-weight: 800; color: var(--ink); }
+.dn__agora-pick { font-size: 11px; font-weight: 700; color: #1a4fa0; background: #dbe7fb; border-radius: 999px; padding: 2px 9px; }
+.tone--sports .dn__agora-pick { color: #136e4f; background: #dbf0e5; }
+.tone--legal .dn__agora-pick { color: #6a3db0; background: #ece0fa; }
+.dn__agora-post-text { font-size: 13.5px; color: #2b2f38; margin: 0 0 7px; line-height: 1.5; }
+.dn__agora-post-like { font-size: 11.5px; font-weight: 700; color: var(--ink-2); }
+.dn__agora-desc { font-size: 12.5px; color: var(--ink-2); margin: 0 0 11px; }
 .dn__agora-btns { display: flex; gap: 8px; }
 .dn__agora-btns .cta { flex: 1; text-align: center; }
 .cta { border: 1px solid #d6deec; background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; padding: 11px 13px; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
