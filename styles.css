@@ -1,4 +1,4 @@
-/* ===== PredictQ 목업 스타일 ===== */
+/* ===== 「다음엔?」 목업 스타일 ===== */
 
 :root {
   --bg: #eef1f6;
@@ -6,7 +6,7 @@
   --ink: #17181c;
   --ink-2: #5b6270;
   --line: #eceef2;
-  --accent: #2b6cf6;       /* PredictQ 기본 강조색 */
+  --accent: #2b6cf6;       /* 「다음엔?」 기본 강조색 */
   --high: #1e9e6a;         /* 확률 높음 */
   --mid: #d98a17;          /* 확률 중간 */
   --low: #6b7280;          /* 확률 낮음/불확실 */
@@ -184,7 +184,7 @@ body {
 .handoff__line { flex: 1; height: 1px; background: var(--line); }
 .handoff__txt { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
 
-/* ── PredictQ 예측 카드 ── */
+/* ── 「다음엔?」 예측 카드 ── */
 .predict {
   border-radius: var(--radius);
   padding: 18px 16px 16px;

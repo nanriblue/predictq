@@ -1,4 +1,4 @@
-// PredictQ 목업 렌더링 로직
+// 「다음엔?」 목업 렌더링 로직
 // ARTICLES(data.js)를 받아 선택된 기사를 기사뷰 + 예측 카드로 그린다.
 
 (function () {
@@ -50,8 +50,8 @@
     return `
       <section class="predict tone--${p.tone}">
         <div class="predict__head">
-          <span class="predict__logo">PredictQ</span>
-          <span class="predict__tag">기사 기반 예측 리서치</span>
+          <span class="predict__logo">다음엔?</span>
+          <span class="predict__tag">기사 이후의 궁금증 예측</span>
         </div>
 
         <h3 class="predict__q">${p.question}</h3>
@@ -118,7 +118,7 @@
 
       <div class="handoff">
         <span class="handoff__line"></span>
-        <span class="handoff__txt">이 이슈, 앞으로 어떻게 될까?</span>
+        <span class="handoff__txt">이 이슈, 다음엔 어떻게 될까요?</span>
         <span class="handoff__line"></span>
       </div>
 

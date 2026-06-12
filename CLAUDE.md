@@ -1,6 +1,6 @@
 # predictq
 
-다음 기사뷰 하단 예측 카드 Agent **PredictQ** 의 공모전 출품 목업.
+다음 기사뷰 하단 예측 카드 Agent **「다음엔?」** (기사 이후의 궁금증을 예측하는 AI Agent) 의 공모전 출품 목업.
 
 ## 원격 저장소
 git@github.com:nanriblue/predictq.git
