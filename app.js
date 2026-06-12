@@ -1,6 +1,7 @@
-// 「다음엔?」 목업 렌더링 로직 — 라이브 예측 카드
-// 24시간 카운트다운 + AI 예측 vs 사용자 투표 vs 독자 예측(VS 구도) + 아고라X + 결과 확인.
-// 화면 카피는 "예측" 중심. 도박/베팅 톤은 피하고 차분한 뉴스 톤 유지.
+// 「다음엔?」 목업 렌더링 로직 — 24시간 라이브 예측 (AI vs 유저 vs 나)
+// 슬롯: 브랜드/라이브 헤더 · 마감 타이머 · 예측 질문(VS) · AI 예측 · 근거 ·
+//       내 예측 · 유저 폴 · 예측 계속 보기 · 아고라X · 흐름 업데이트 · 결과 보기.
+// 화면 카피는 "예측" 중심. 도박/베팅 톤 배제, 차분한 뉴스 톤 유지.
 
 (function () {
   const articleEl = document.getElementById("article");
@@ -11,22 +12,7 @@
   const pad = (n) => String(n).padStart(2, "0");
   const hms = (s) => `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 
-  // 박빙 / 현재 우세 (AI 격차 기준)
-  function gapStatus(ai) {
-    return Math.abs(ai[0].pct - ai[1].pct) <= 10 ? "박빙" : "현재 우세";
-  }
-
-  // AI와 독자가 같은 방향인지 다른 방향인지 한 줄로
-  function compareLine(ai, reader) {
-    const aiLead = ai[0].pct >= ai[1].pct ? ai[0] : ai[1];
-    const rdLead = reader[0].pct >= reader[1].pct ? reader[0] : reader[1];
-    if (aiLead.label === rdLead.label) {
-      return `AI와 독자가 모두 ‘${aiLead.label}’ 쪽을 보고 있어요.`;
-    }
-    return `AI는 ‘${aiLead.label}’, 독자는 ‘${rdLead.label}’ 쪽으로 갈렸어요.`;
-  }
-
-  // VS 막대 (선거 개표 그래픽처럼 좌우가 밀고 당김). anim=true면 0에서 채움.
+  // VS 막대 (선거 개표 그래픽). anim=true면 0에서 채움.
   function vsBar(opts, kind, anim) {
     const lead = opts[0].pct >= opts[1].pct ? 0 : 1;
     const w = (i) => (anim ? "width:0" : "width:" + opts[i].pct + "%");
@@ -41,62 +27,85 @@
       </div>`;
   }
 
-  // 결과 확인 패널
+  // AI와 유저 폴이 같은 방향인지 짧게
+  function compareLine(ai, poll) {
+    const a = ai[0].pct >= ai[1].pct ? ai[0] : ai[1];
+    const p = poll[0].pct >= poll[1].pct ? poll[0] : poll[1];
+    const pollClose = Math.abs(poll[0].pct - poll[1].pct) <= 6;
+    if (pollClose) return `AI는 ‘${a.label}’, 유저 폴은 박빙이에요.`;
+    if (a.label === p.label) return `AI와 유저가 모두 ‘${a.label}’를 보고 있어요.`;
+    return `AI는 ‘${a.label}’, 유저는 ‘${p.label}’… 예측이 갈렸어요.`;
+  }
+
+  // 11. 결과 보기 (AI / 유저 폴 / 나 3자 비교)
   function resolvedPanel(f) {
     if (!f.resolved) {
       return `
         <div class="dn__resolved">
           <span class="dn__rbadge dn__rbadge--wait">결과 대기 중</span>
-          <p class="dn__rmsg">결과가 확인되면 이 자리에서 AI·독자·내 예측과 적중 여부를 보여드려요.</p>
+          <p class="dn__rmsg">예측 마감 후 결과가 확인되면 알려드릴게요.</p>
         </div>`;
     }
     const r = f.resolved;
+    const cell = (lab, val, hit) => `
+      <div class="dn__rcell ${hit ? "is-hit" : "is-miss"}">
+        <span class="dn__rcell-lab">${lab}</span>
+        <b class="dn__rcell-val">${val}</b>
+        <span class="dn__rcell-mark">${hit ? "적중" : "빗나감"}</span>
+      </div>`;
     return `
       <div class="dn__resolved">
         <span class="dn__rbadge">결과 확인</span>
         <p class="dn__routcome">${r.outcome}</p>
-        <ul class="dn__rlist">
-          <li><span>AI 예측</span><b>${r.ai}</b></li>
-          <li><span>독자 예측</span><b>${r.reader}</b></li>
-          <li><span>내 예측</span><b>${r.my}</b></li>
-        </ul>
-        <div class="dn__rresult ${r.hit ? "is-hit" : "is-miss"}">결과: ${r.hit ? "적중" : "빗나감"}</div>
+        <div class="dn__rgrid">
+          ${cell("AI", `${r.ai.pick} ${r.ai.pct}%`, r.ai.hit)}
+          ${cell("유저 폴", `${r.poll.pick} ${r.poll.pct}%`, r.poll.hit)}
+          ${cell("내 예측", r.my.pick, r.my.hit)}
+        </div>
+        <div class="dn__rsummary">${r.summary}</div>
       </div>`;
   }
 
   function renderFlow(f) {
+    const o = f.ai; // 선택지 라벨
     return `
       <section class="dn tone--${f.tone}" data-deadline="${f.deadlineSec}">
-        <div class="dn__head">
-          <span class="dn__logo">다음엔?</span>
-          <span class="dn__tag">라이브 예측</span>
+
+        <!-- 1. 브랜드 / 라이브 헤더 -->
+        <div class="dn__brand">
+          <span class="dn__brand-name">다음엔?</span>
+          <span class="dn__brand-live"><i class="dn__dot"></i>LIVE</span>
           <button class="dn__settle" type="button">결과 보기</button>
         </div>
-
-        <!-- 24시간 라이브 상태 -->
-        <div class="dn__live">
-          <div class="dn__live-top">
-            <span class="dn__live-badge"><i class="dn__dot"></i>LIVE · 예측 진행 중</span>
-            <span class="dn__live-soon">마감 임박</span>
-            <span class="dn__gap">${gapStatus(f.ai)}</span>
-          </div>
-          <div class="dn__count-wrap">남은 시간 <span class="dn__count">--:--:--</span></div>
-          <p class="dn__live-note">기사 송고 후 24시간 동안 참여할 수 있어요.</p>
-          <div class="dn__closed">투표 마감 · 결과를 기다리는 중</div>
-        </div>
+        <p class="dn__brand-sub">24시간 라이브 예측 · AI와 유저, 그리고 내 예측이 맞붙습니다.</p>
 
         <div class="dn__main">
-          <h3 class="dn__q">${f.question}</h3>
+          <!-- 2. 마감 타이머 -->
+          <div class="dn__timer">
+            <span class="dn__timer-stat">예측 진행중</span>
+            <span class="dn__timer-main">남은 시간 <b class="dn__count">--:--:--</b></span>
+            <span class="dn__timer-closed">예측 마감 · 결과를 기다리는 중</span>
+          </div>
+          <p class="dn__timer-sub">기사 송고 후 24시간 동안 참여할 수 있어요.</p>
 
-          <!-- AI 예측 -->
+          <!-- 3. 예측 질문 + VS 매치업 -->
+          <h3 class="dn__q">${f.question}</h3>
+          <div class="dn__matchup">
+            <span class="dn__mu dn__mu--a">${o[0].label}</span>
+            <span class="dn__mu-vs">VS</span>
+            <span class="dn__mu dn__mu--b">${o[1].label}</span>
+          </div>
+
+          <!-- 4. AI 예측 -->
           <div class="dn__ai">
             <span class="dn__ai-lab">AI 예측</span>
             ${vsBar(f.ai, "ai", true)}
             <p class="dn__ai-sent">${f.aiSentence}</p>
           </div>
 
-          <!-- AI 예측 근거 (바로 아래) -->
+          <!-- 5. AI 판단 근거 -->
           <div class="dn__view">
+            <h4 class="dn__view-title">왜 이렇게 예측했나요?</h4>
             <div class="dn__view-row is-pro">
               <span class="dn__view-lab">${f.proLabel}</span>
               <p>${f.pro}</p>
@@ -111,28 +120,46 @@
             </div>
           </div>
 
-          <!-- 사용자 투표 (VS 대결) -->
-          <div class="dn__vote">
-            <span class="dn__vote-lab">당신의 예측은?</span>
+          <!-- 6. 내 예측 -->
+          <div class="dn__mine">
+            <span class="dn__slot-lab">내 예측</span>
+            <p class="dn__mine-q">당신의 선택은?</p>
             <div class="dn__vs">
-              <button class="dn__opt dn__opt--a" type="button" data-opt="${f.ai[0].label}">${f.ai[0].label}</button>
+              <button class="dn__opt dn__opt--a" type="button" data-opt="${o[0].label}">${o[0].label}</button>
               <span class="dn__vsbadge">VS</span>
-              <button class="dn__opt dn__opt--b" type="button" data-opt="${f.ai[1].label}">${f.ai[1].label}</button>
+              <button class="dn__opt dn__opt--b" type="button" data-opt="${o[1].label}">${o[1].label}</button>
             </div>
-            <p class="dn__mypick">내 예측 <b>—</b></p>
+            <p class="dn__mine-saved">내 예측 <b>—</b> · 예측이 저장됐어요. 결과가 나오면 비교해드릴게요.</p>
           </div>
 
-          <!-- 독자 예측 (투표 후 공개) -->
-          <div class="dn__reader is-locked">
-            <div class="dn__reader-lock">🔒 투표하면 독자 예측을 볼 수 있어요</div>
-            <div class="dn__reader-body">
-              <div class="dn__reader-head"><span>독자 예측</span><em>총 ${fmt(f.reader.total)}명 참여</em></div>
+          <!-- 7. 유저 폴 -->
+          <div class="dn__poll is-locked">
+            <span class="dn__slot-lab">유저 폴</span>
+            <div class="dn__poll-lock">🔒 예측하면 다른 유저들의 선택을 볼 수 있어요</div>
+            <div class="dn__poll-body">
+              <p class="dn__poll-sub">다른 유저들은 이렇게 예측했어요.</p>
               ${vsBar(f.reader.options, "reader", true)}
-              <p class="dn__compare">${compareLine(f.ai, f.reader.options)}</p>
+              <div class="dn__poll-foot">
+                <span class="dn__poll-total">${fmt(f.reader.total)}명 참여</span>
+                <span class="dn__compare">${compareLine(f.ai, f.reader.options)}</span>
+              </div>
             </div>
           </div>
 
-          <!-- 아고라X 커뮤니티 -->
+          <!-- 8. 예측 계속 보기 -->
+          <div class="dn__follow">
+            <span class="dn__slot-lab">예측 계속 보기</span>
+            <button class="dn__fcard" type="button">
+              <span class="dn__fcard-ico">🔔</span>
+              <span class="dn__fcard-body"><b>큰 변화면 알려줘</b><em>AI 예측이 크게 바뀌거나 결과가 나오면 알려드려요.</em></span>
+            </button>
+            <button class="dn__fcard" type="button">
+              <span class="dn__fcard-ico">🔖</span>
+              <span class="dn__fcard-body"><b>내 이슈에 저장</b><em>MY에서 이 예측을 계속 확인할 수 있어요.</em></span>
+            </button>
+          </div>
+
+          <!-- 9. 아고라X -->
           <div class="dn__agora">
             <div class="dn__agora-card">
               <div class="dn__agora-head">
@@ -156,33 +183,20 @@
             </div>
           </div>
 
-          <!-- 액션 버튼 -->
-          <div class="dn__actions">
-            <button class="act act--primary" type="button">
-              <span class="act__ico">🔔</span>
-              <span class="act__body"><b>큰 변화면 알려줘</b><em>예측이 크게 바뀌면 알림</em></span>
-            </button>
-            <div class="dn__actions-row">
-              <button class="act act--sub" type="button">
-                <span class="act__ico">📈</span>
-                <span class="act__body"><b>이 흐름 더보기</b><em>관련 기사와 데이터</em></span>
-              </button>
-              <button class="act act--sub" type="button">
-                <span class="act__ico">🔖</span>
-                <span class="act__body"><b>내 이슈에 저장</b><em>MY에서 계속 보기</em></span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 흐름 업데이트 -->
+          <!-- 10. 흐름 업데이트 + 이 흐름 더보기 -->
           <div class="dn__updates">
             <h4>흐름 업데이트</h4>
             ${f.updates
               .map((u) => `<div class="dn__upd"><span class="dn__upd-time">${u.time}</span><p>${u.text}</p></div>`)
               .join("")}
+            <button class="dn__moreflow" type="button">
+              <b>이 흐름 더보기</b>
+              <em>관련 기사 · 주요 데이터 · 예측 변화 이유</em>
+            </button>
           </div>
         </div>
 
+        <!-- 11. 결과 보기 -->
         ${resolvedPanel(f)}
 
         <p class="dn__note">${f.note}</p>
@@ -203,9 +217,8 @@
       .join("")}</div>`;
   }
 
-  // 독자 예측 막대 채우기
-  function fillReader(card) {
-    card.querySelectorAll(".dn__reader .dn__vsseg").forEach((s) => {
+  function fillPoll(card) {
+    card.querySelectorAll(".dn__poll .dn__vsseg").forEach((s) => {
       s.style.width = s.dataset.w + "%";
     });
   }
@@ -221,7 +234,7 @@
       });
     });
 
-    // 사용자 투표 → 독자 예측 공개
+    // 내 예측 → 유저 폴 공개
     card.querySelectorAll(".dn__opt").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (card.classList.contains("is-closed")) return;
@@ -230,10 +243,11 @@
           b.disabled = true;
         });
         btn.classList.add("is-picked");
-        const my = card.querySelector(".dn__mypick b");
+        const my = card.querySelector(".dn__mine-saved b");
         if (my) my.textContent = btn.dataset.opt;
-        card.querySelector(".dn__reader").classList.remove("is-locked");
-        requestAnimationFrame(() => fillReader(card));
+        card.querySelector(".dn__mine").classList.add("is-voted");
+        card.querySelector(".dn__poll").classList.remove("is-locked");
+        requestAnimationFrame(() => fillPoll(card));
       });
     });
 
@@ -241,29 +255,35 @@
     const settle = card.querySelector(".dn__settle");
     settle.addEventListener("click", () => {
       const on = card.classList.toggle("show-resolved");
-      settle.textContent = on ? "← 예측 카드로" : "결과 보기";
+      settle.textContent = on ? "← 예측으로" : "결과 보기";
     });
 
     // 24시간 카운트다운
-    const countEl = card.querySelector(".dn__count");
+    const statEl = card.querySelector(".dn__timer-stat");
+    const mainEl = card.querySelector(".dn__timer-main");
     let sec = parseInt(card.dataset.deadline, 10) || 0;
     clearInterval(countdownTimer);
     const tick = () => {
       if (sec <= 0) {
         card.classList.remove("is-soon");
         card.classList.add("is-closed");
-        // 마감 시 투표 비활성화 + 독자 예측 공개
         card.querySelectorAll(".dn__opt").forEach((b) => (b.disabled = true));
-        const reader = card.querySelector(".dn__reader");
-        if (reader.classList.contains("is-locked")) {
-          reader.classList.remove("is-locked");
-          requestAnimationFrame(() => fillReader(card));
+        const poll = card.querySelector(".dn__poll");
+        if (poll.classList.contains("is-locked")) {
+          poll.classList.remove("is-locked");
+          requestAnimationFrame(() => fillPoll(card));
         }
         clearInterval(countdownTimer);
         return;
       }
-      countEl.textContent = hms(sec);
-      card.classList.toggle("is-soon", sec <= 3600);
+      if (sec <= 3600) {
+        card.classList.add("is-soon");
+        statEl.textContent = "마감임박";
+        mainEl.innerHTML = `<b class="dn__count">${hms(sec)}</b> 남음`;
+      } else {
+        statEl.textContent = "예측 진행중";
+        mainEl.innerHTML = `남은 시간 <b class="dn__count">${hms(sec)}</b>`;
+      }
       sec--;
     };
     tick();
@@ -297,7 +317,7 @@
         <span class="handoff__txt">이 기사, 결과는 어떻게 될까요?</span>
         <span class="handoff__line"></span>
       </div>
-      <p class="handoff__sub">AI 예측과 독자 투표가 24시간 동안 함께 움직입니다.</p>
+      <p class="handoff__sub">AI 예측 · 유저 폴 · 내 선택을 24시간 동안 비교해보세요.</p>
 
       ${renderFlow(a.flow)}
     `;

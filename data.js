@@ -48,7 +48,7 @@ const ARTICLES = [
       },
       agora: {
         title: "삼성전자, 오른다 VS 내린다",
-        desc: "아고라X에서 1,240명이 예측 이유를 나누고 있어요.",
+        desc: "예측 이유를 남기고 다른 유저의 선택을 확인해보세요.",
         sample: {
           nick: "반도체초보",
           pick: "오른다",
@@ -62,10 +62,10 @@ const ARTICLES = [
       ],
       resolved: {
         outcome: "삼성전자 주가, 올랐어요",
-        ai: "오른다 62%",
-        reader: "오른다 58%",
-        my: "오른다",
-        hit: true,
+        ai: { pick: "오른다", pct: 62, hit: true },
+        poll: { pick: "오른다", pct: 58, hit: true },
+        my: { pick: "오른다", hit: true },
+        summary: "AI와 유저, 내 예측이 모두 맞혔어요.",
       },
       note: "AI 예측은 공개 정보 기반 참고용이며, 투자·법률 자문이 아닙니다.",
     },
@@ -115,7 +115,7 @@ const ARTICLES = [
       },
       agora: {
         title: "이정후, 19경기 연속 안타 칠까?",
-        desc: "아고라X에서 2,310명이 예측과 응원을 나누고 있어요.",
+        desc: "팬들의 예측 이유와 응원이 이어지고 있어요.",
         sample: {
           nick: "고척돔단골",
           pick: "친다",
@@ -129,10 +129,10 @@ const ARTICLES = [
       ],
       resolved: {
         outcome: "이정후, 안타를 쳤어요",
-        ai: "친다 68%",
-        reader: "친다 71%",
-        my: "친다",
-        hit: true,
+        ai: { pick: "친다", pct: 68, hit: true },
+        poll: { pick: "친다", pct: 71, hit: true },
+        my: { pick: "친다", hit: true },
+        summary: "AI와 유저, 내 예측이 모두 맞혔어요.",
       },
       note: "AI 예측은 공개 기록 기반 참고용이에요. 경기 전 다시 업데이트돼요.",
     },
@@ -182,7 +182,7 @@ const ARTICLES = [
       },
       agora: {
         title: "민희진 측, 이번 소송에서 이길까?",
-        desc: "아고라X에서 3,580명이 쟁점별 의견을 나누고 있어요.",
+        desc: "쟁점별 예측 이유가 이어지고 있어요.",
         sample: {
           nick: "법알못",
           pick: "어렵다",
