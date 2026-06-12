@@ -1,138 +1,154 @@
 // 「다음엔?」 목업 렌더링 로직
-// ARTICLES(data.js)를 받아 선택된 기사를 다음 기사뷰 + 하단 「다음엔?」 흐름 카드로 그린다.
-// 화면 카피는 "예측" 대신 전망·흐름·관전포인트 중심. 확률은 자연어 전망 뒤에 보조로 노출.
+// 다음 기사뷰 + 하단 2지선다 흐름 카드. AI 전망 / 내 투표 / 독자 전망(투표 후 공개) /
+// 좋게 볼 점·걸리는 점·체크포인트·커뮤니티·흐름 업데이트(접기) / 결과 정산(토글).
 
 (function () {
   const articleEl = document.getElementById("article");
   const switcherBtns = document.querySelectorAll(".switcher__btn");
 
-  // 숫자에 천 단위 콤마
   const fmt = (n) => n.toLocaleString("ko-KR");
 
-  // AI 전망 수치 → 색상 톤(우세/팽팽/우려)
-  function flowClass(p) {
-    if (p >= 60) return "is-high";
-    if (p >= 45) return "is-mid";
-    return "is-low";
+  // 2지선다 분할 막대 (높은 쪽이 강조색). animate=true면 width 0에서 채움.
+  function splitBar(options, animate) {
+    const lead = options[0].pct >= options[1].pct ? 0 : 1;
+    return `<div class="dn__split">${options
+      .map(
+        (o, i) =>
+          `<div class="dn__seg ${i === lead ? "is-lead" : ""}" style="${
+            animate ? "width:0" : "width:" + o.pct + "%"
+          }" data-w="${o.pct}"><span>${o.label}</span><b>${o.pct}%</b></div>`
+      )
+      .join("")}</div>`;
   }
 
-  // 민감 이슈 디스클레이머 박스
-  function renderDisclaimer(f) {
-    if (!f.sensitive) return "";
-    return `
-      <div class="flowc__disc">
-        <span class="flowc__disc-tag">⚠ 표현 주의 · 민감 이슈</span>
-        <ul>${f.disclaimers.map((t) => `<li>${t}</li>`).join("")}</ul>
-      </div>`;
-  }
-
-  // 다음 체크포인트(관전 포인트) 칩
-  function renderCheckpoints(items) {
-    return items.map((t) => `<span class="flowc__chip">${t}</span>`).join("");
-  }
-
-  // 독자 전망(구조화된 선택형 참여) 막대
-  function renderPoll(r) {
-    const max = Math.max(...r.options.map((o) => o.pct));
-    const rows = r.options
-      .map((o) => {
-        const lead = o.pct === max ? "is-lead" : "";
-        return `
-        <div class="poll__row">
-          <span class="poll__name">${o.label}</span>
-          <div class="poll__track"><span class="poll__fill ${lead}" data-w="${o.pct}"></span></div>
-          <b class="poll__pct">${o.pct}%</b>
+  // 결과 정산 패널 (resolved가 있으면 결과, 없으면 진행 중 안내)
+  function resolvedPanel(f) {
+    if (!f.resolved) {
+      return `
+        <div class="dn__resolved">
+          <div class="dn__resolved-badge dn__resolved-badge--wait">⏳ 아직 결과가 확정되지 않았어요</div>
+          <p class="dn__resolved-msg">선고·발표 등 결과가 확인되면 이 자리에서 정산 결과를 알려드려요.</p>
         </div>`;
-      })
-      .join("");
+    }
+    const r = f.resolved;
     return `
-      <div class="flowc__poll">
-        <h4>독자 전망</h4>
-        <p class="poll__sent">${r.sentence}</p>
-        ${rows}
-        <p class="poll__total">총 ${fmt(r.total)}명 참여</p>
+      <div class="dn__resolved">
+        <div class="dn__resolved-badge">🏁 예측 결과가 나왔어요</div>
+        <p class="dn__resolved-outcome">${r.outcome}</p>
+        <ul class="dn__resolved-list">
+          <li><span>AI 전망</span><b>${r.ai}</b></li>
+          <li><span>독자 전망</span><b>${r.reader}</b></li>
+          <li><span>내 전망</span><b>${r.my}</b></li>
+        </ul>
+        <div class="dn__resolved-result ${r.hit ? "is-hit" : "is-miss"}">
+          결과: ${r.hit ? "적중 🎯" : "빗나감"}
+        </div>
       </div>`;
-  }
-
-  // 흐름 업데이트(텍스트 타임라인)
-  function renderUpdates(updates) {
-    const items = updates
-      .map(
-        (u) => `
-        <div class="upd">
-          <span class="upd__time">${u.time}</span>
-          <p class="upd__text">${u.text}</p>
-        </div>`
-      )
-      .join("");
-    return `<div class="flowc__updates"><h4>흐름 업데이트</h4>${items}</div>`;
-  }
-
-  // 이 흐름 더 보기(관련 흐름)
-  function renderRelated(related) {
-    const items = related
-      .map(
-        (r) => `
-        <a class="rel">
-          <span class="rel__tag">${r.tag}</span>
-          <span class="rel__text">${r.text}</span>
-        </a>`
-      )
-      .join("");
-    return `<div class="flowc__related"><h4>이 흐름 더 보기</h4>${items}</div>`;
   }
 
   function renderFlow(f) {
-    const cls = flowClass(f.aiOutlook);
     return `
-      <section class="flowc tone--${f.tone}">
-        <div class="flowc__head">
-          <span class="flowc__logo">다음엔?</span>
-          <span class="flowc__tag">이 이슈의 다음 흐름</span>
+      <section class="dn tone--${f.tone}">
+        <div class="dn__head">
+          <span class="dn__logo">다음엔?</span>
+          <span class="dn__tag">이 이슈의 다음 흐름</span>
+          <button class="dn__settle" type="button">🏁 결과 정산 미리보기</button>
         </div>
 
-        <h3 class="flowc__q">${f.question}</h3>
+        <h3 class="dn__q">${f.question}</h3>
 
-        <div class="flowc__current ${cls}">
-          <span class="flowc__dot"></span>
-          <div class="flowc__current-body">
-            <span class="flowc__current-lab">현재 흐름</span>
-            <p class="flowc__current-txt">${f.current}</p>
+        <div class="dn__live">
+          <!-- AI 전망 -->
+          <div class="dn__ai">
+            <div class="dn__ai-top">
+              <span class="dn__ai-lab">AI 전망</span>
+              <span class="dn__ai-sub">현재 공개 정보 기준</span>
+            </div>
+            <p class="dn__ai-sent">${f.aiSentence}</p>
+            ${splitBar(f.ai, false)}
           </div>
-          <span class="flowc__ai">AI 전망 <b>${f.aiOutlook}%</b></span>
-        </div>
 
-        ${renderDisclaimer(f)}
-
-        <div class="flowc__view">
-          <div class="flowc__view-row is-pro">
-            <span class="flowc__view-lab">${f.proLabel}</span>
-            <p>${f.pro}</p>
+          <!-- 내 전망 남기기 -->
+          <div class="dn__vote">
+            <span class="dn__vote-lab">내 전망 남기기 · 당신의 전망은?</span>
+            <div class="dn__vote-btns">
+              ${f.ai
+                .map((o) => `<button class="vbtn" type="button" data-opt="${o.label}">${o.label}</button>`)
+                .join("")}
+            </div>
           </div>
-          <div class="flowc__view-row is-con">
-            <span class="flowc__view-lab">${f.conLabel}</span>
-            <p>${f.con}</p>
+
+          <!-- 독자 전망 (투표 후 공개) -->
+          <div class="dn__reader is-locked">
+            <div class="dn__reader-lock">🔒 투표하면 독자 전망을 볼 수 있어요</div>
+            <div class="dn__reader-body">
+              <div class="dn__reader-head"><span>독자 전망</span><em>총 ${fmt(
+                f.reader.total
+              )}명 참여</em></div>
+              ${splitBar(f.reader.options, true)}
+              <p class="dn__mypick">내 전망 <b>—</b></p>
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <div class="dn__cta">
+            ${f.cta
+              .map((c, i) => `<button class="cta ${i === 0 ? "cta--primary" : ""}" type="button">${c}</button>`)
+              .join("")}
+          </div>
+
+          <!-- 자세히 보기 (접기) -->
+          <button class="dn__more" type="button">자세히 보기 <span class="dn__more-caret">▾</span></button>
+          <div class="dn__detail">
+            <div class="dn__view">
+              <div class="dn__view-row is-pro">
+                <span class="dn__view-lab">${f.proLabel}</span>
+                <p>${f.pro}</p>
+              </div>
+              <div class="dn__view-row is-con">
+                <span class="dn__view-lab">${f.conLabel}</span>
+                <p>${f.con}</p>
+              </div>
+            </div>
+
+            <div class="dn__check">
+              <h4>다음 체크포인트</h4>
+              <div class="dn__chips">${f.checkpoints
+                .map((c) => `<span class="dn__chip">${c}</span>`)
+                .join("")}</div>
+            </div>
+
+            <div class="dn__community">
+              <h4>커뮤니티 의견</h4>
+              <div class="dn__comm-card">
+                <span class="dn__comm-brand">다음 커뮤니티</span>
+                <p class="dn__comm-title">${f.community.title}</p>
+                <p class="dn__comm-desc">${f.community.desc}</p>
+                <div class="dn__comm-btns">
+                  <button class="cta cta--primary" type="button">의견 쓰기</button>
+                  <button class="cta" type="button">토론 보기</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="dn__updates">
+              <h4>흐름 업데이트</h4>
+              ${f.updates
+                .map(
+                  (u) => `<div class="dn__upd"><span class="dn__upd-time">${u.time}</span><p>${u.text}</p></div>`
+                )
+                .join("")}
+            </div>
           </div>
         </div>
 
-        <div class="flowc__check">
-          <h4>다음 체크포인트</h4>
-          <div class="flowc__chips">${renderCheckpoints(f.checkpoints)}</div>
-        </div>
+        ${resolvedPanel(f)}
 
-        ${renderPoll(f.reader)}
-        ${renderUpdates(f.updates)}
-        ${renderRelated(f.related)}
-
-        <div class="flowc__cta">
-          ${f.cta.map((c, i) => `<button class="cta ${i === 0 ? "cta--primary" : ""}">${c}</button>`).join("")}
-        </div>
-
-        <p class="flowc__note">${f.note} · 업데이트 ${f.updatedAgo}</p>
+        <p class="dn__note">${f.note} · 업데이트 ${f.updatedAgo}</p>
       </section>`;
   }
 
-  // 다음 기사뷰의 표정(감정) 리액션 바
+  // 표정(감정) 리액션 바 (다음 기사뷰)
   function renderEmotions(emotions) {
     return `<div class="article__reactions">${emotions
       .map(
@@ -144,6 +160,48 @@
         </button>`
       )
       .join("")}</div>`;
+  }
+
+  // 카드 내부 인터랙션 바인딩 (투표 / 접기 / 결과 정산)
+  function bindCard() {
+    const card = articleEl.querySelector(".dn");
+    if (!card) return;
+
+    // 투표 → 버튼 활성화 + 독자 전망 공개
+    card.querySelectorAll(".vbtn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        card.querySelectorAll(".vbtn").forEach((b) => {
+          b.classList.remove("is-picked");
+          b.disabled = true;
+        });
+        btn.classList.add("is-picked");
+        const my = card.querySelector(".dn__mypick b");
+        if (my) my.textContent = btn.dataset.opt;
+        const reader = card.querySelector(".dn__reader");
+        reader.classList.remove("is-locked");
+        requestAnimationFrame(() => {
+          reader.querySelectorAll(".dn__seg").forEach((s) => {
+            s.style.width = s.dataset.w + "%";
+          });
+        });
+      });
+    });
+
+    // 자세히 보기 접기/펼치기
+    const more = card.querySelector(".dn__more");
+    const detail = card.querySelector(".dn__detail");
+    more.addEventListener("click", () => {
+      const open = detail.classList.toggle("is-open");
+      more.querySelector(".dn__more-caret").textContent = open ? "▴" : "▾";
+      more.firstChild.textContent = open ? "접기 " : "자세히 보기 ";
+    });
+
+    // 결과 정산 미리보기 토글
+    const settle = card.querySelector(".dn__settle");
+    settle.addEventListener("click", () => {
+      const on = card.classList.toggle("show-resolved");
+      settle.textContent = on ? "↩ 진행 중 보기" : "🏁 결과 정산 미리보기";
+    });
   }
 
   function renderArticle(a) {
@@ -173,19 +231,13 @@
         <span class="handoff__txt">이 기사, 다음엔 어떻게 될까요?</span>
         <span class="handoff__line"></span>
       </div>
+      <p class="handoff__sub">AI 전망과 독자 의견을 함께 보고, 결과가 바뀌면 다시 알려드려요.</p>
 
       ${renderFlow(a.flow)}
     `;
-
-    // 막대 채우기 애니메이션 (렌더 직후 다음 프레임에서 width 적용)
-    requestAnimationFrame(() => {
-      articleEl.querySelectorAll(".poll__fill").forEach((el) => {
-        el.style.width = el.dataset.w + "%";
-      });
-    });
+    bindCard();
   }
 
-  // 탭 전환
   switcherBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       switcherBtns.forEach((b) => b.classList.remove("is-active"));
@@ -195,6 +247,5 @@
     });
   });
 
-  // 첫 화면
   renderArticle(ARTICLES[0]);
 })();
