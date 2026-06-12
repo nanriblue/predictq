@@ -1,5 +1,6 @@
 // 「다음엔?」 목업 렌더링 로직
-// ARTICLES(data.js)를 받아 선택된 기사를 기사뷰 + 예측 카드로 그린다.
+// ARTICLES(data.js)를 받아 선택된 기사를 다음 기사뷰 + 하단 「다음엔?」 흐름 카드로 그린다.
+// 화면 카피는 "예측" 대신 전망·흐름·관전포인트 중심. 확률은 자연어 전망 뒤에 보조로 노출.
 
 (function () {
   const articleEl = document.getElementById("article");
@@ -8,95 +9,126 @@
   // 숫자에 천 단위 콤마
   const fmt = (n) => n.toLocaleString("ko-KR");
 
-  // 리스트 항목들을 <li> 문자열로
-  const listItems = (arr) => arr.map((t) => `<li>${t}</li>`).join("");
-
-  // 예측 확률 → 색상 톤(높음/중간/낮음)을 막대 색으로 표현
-  function probClass(p) {
+  // AI 전망 수치 → 색상 톤(우세/팽팽/우려)
+  function flowClass(p) {
     if (p >= 60) return "is-high";
     if (p >= 45) return "is-mid";
     return "is-low";
   }
 
-  // 업데이트 로그(작은 추이 그래프)를 막대들로
-  function renderLog(log) {
-    const max = 100;
-    const bars = log
-      .map((d, i) => {
-        const h = Math.max(8, (d.value / max) * 100);
-        const last = i === log.length - 1;
-        return `
-          <div class="logbar ${last ? "is-now" : ""}">
-            <span class="logbar__val">${d.value}%</span>
-            <span class="logbar__fill" style="height:${h}%"></span>
-            <span class="logbar__date">${d.date}</span>
-          </div>`;
-      })
-      .join("");
-    return `<div class="predict__log">${bars}</div>`;
-  }
-
   // 민감 이슈 디스클레이머 박스
-  function renderDisclaimer(d) {
-    if (!d.sensitive) return "";
+  function renderDisclaimer(f) {
+    if (!f.sensitive) return "";
     return `
-      <div class="predict__disclaimer">
-        <span class="predict__disclaimer-tag">⚠ 표현 주의 · 민감 이슈</span>
-        <ul>${listItems(d.disclaimers)}</ul>
+      <div class="flowc__disc">
+        <span class="flowc__disc-tag">⚠ 표현 주의 · 민감 이슈</span>
+        <ul>${f.disclaimers.map((t) => `<li>${t}</li>`).join("")}</ul>
       </div>`;
   }
 
-  function renderPredict(p) {
+  // 다음 체크포인트(관전 포인트) 칩
+  function renderCheckpoints(items) {
+    return items.map((t) => `<span class="flowc__chip">${t}</span>`).join("");
+  }
+
+  // 독자 전망(구조화된 선택형 참여) 막대
+  function renderPoll(r) {
+    const max = Math.max(...r.options.map((o) => o.pct));
+    const rows = r.options
+      .map((o) => {
+        const lead = o.pct === max ? "is-lead" : "";
+        return `
+        <div class="poll__row">
+          <span class="poll__name">${o.label}</span>
+          <div class="poll__track"><span class="poll__fill ${lead}" data-w="${o.pct}"></span></div>
+          <b class="poll__pct">${o.pct}%</b>
+        </div>`;
+      })
+      .join("");
     return `
-      <section class="predict tone--${p.tone}">
-        <div class="predict__head">
-          <span class="predict__logo">다음엔?</span>
-          <span class="predict__tag">기사 이후의 궁금증 예측</span>
+      <div class="flowc__poll">
+        <h4>독자 전망</h4>
+        <p class="poll__sent">${r.sentence}</p>
+        ${rows}
+        <p class="poll__total">총 ${fmt(r.total)}명 참여</p>
+      </div>`;
+  }
+
+  // 흐름 업데이트(텍스트 타임라인)
+  function renderUpdates(updates) {
+    const items = updates
+      .map(
+        (u) => `
+        <div class="upd">
+          <span class="upd__time">${u.time}</span>
+          <p class="upd__text">${u.text}</p>
+        </div>`
+      )
+      .join("");
+    return `<div class="flowc__updates"><h4>흐름 업데이트</h4>${items}</div>`;
+  }
+
+  // 이 흐름 더 보기(관련 흐름)
+  function renderRelated(related) {
+    const items = related
+      .map(
+        (r) => `
+        <a class="rel">
+          <span class="rel__tag">${r.tag}</span>
+          <span class="rel__text">${r.text}</span>
+        </a>`
+      )
+      .join("");
+    return `<div class="flowc__related"><h4>이 흐름 더 보기</h4>${items}</div>`;
+  }
+
+  function renderFlow(f) {
+    const cls = flowClass(f.aiOutlook);
+    return `
+      <section class="flowc tone--${f.tone}">
+        <div class="flowc__head">
+          <span class="flowc__logo">다음엔?</span>
+          <span class="flowc__tag">이 이슈의 다음 흐름</span>
         </div>
 
-        <h3 class="predict__q">${p.question}</h3>
+        <h3 class="flowc__q">${f.question}</h3>
 
-        <div class="predict__gauge">
-          <div class="predict__num ${probClass(p.probability)}">
-            <strong>${p.probability}</strong><span>%</span>
+        <div class="flowc__current ${cls}">
+          <span class="flowc__dot"></span>
+          <div class="flowc__current-body">
+            <span class="flowc__current-lab">현재 흐름</span>
+            <p class="flowc__current-txt">${f.current}</p>
           </div>
-          <div class="predict__bar">
-            <span class="predict__label">${p.label}</span>
-            <div class="predict__track">
-              <div class="predict__fill ${probClass(p.probability)}" data-w="${p.probability}"></div>
-            </div>
-            <span class="predict__updated">현재 공개 정보 기준 · 업데이트 ${p.updatedAgo}</span>
+          <span class="flowc__ai">AI 전망 <b>${f.aiOutlook}%</b></span>
+        </div>
+
+        ${renderDisclaimer(f)}
+
+        <div class="flowc__view">
+          <div class="flowc__view-row is-pro">
+            <span class="flowc__view-lab">${f.proLabel}</span>
+            <p>${f.pro}</p>
+          </div>
+          <div class="flowc__view-row is-con">
+            <span class="flowc__view-lab">${f.conLabel}</span>
+            <p>${f.con}</p>
           </div>
         </div>
 
-        ${renderDisclaimer(p)}
-
-        <div class="predict__grid">
-          <div class="predict__col predict__col--ground">
-            <h4>📈 근거</h4>
-            <ul>${listItems(p.grounds)}</ul>
-          </div>
-          <div class="predict__col predict__col--var">
-            <h4>🎯 핵심 변수</h4>
-            <ul>${listItems(p.variables)}</ul>
-          </div>
+        <div class="flowc__check">
+          <h4>다음 체크포인트</h4>
+          <div class="flowc__chips">${renderCheckpoints(f.checkpoints)}</div>
         </div>
 
-        <div class="predict__counter">
-          <h4>↔ 반대 근거</h4>
-          <ul>${listItems(p.counter)}</ul>
+        ${renderPoll(f.reader)}
+        ${renderUpdates(f.updates)}
+        ${renderRelated(f.related)}
+
+        <div class="flowc__cta">
+          ${f.cta.map((c, i) => `<button class="cta ${i === 0 ? "cta--primary" : ""}">${c}</button>`).join("")}
         </div>
 
-        <div class="predict__logwrap">
-          <h4>예측 업데이트 로그</h4>
-          ${renderLog(p.log)}
-        </div>
-
-        <div class="predict__cta">
-          ${p.cta.map((c, i) => `<button class="cta ${i === 0 ? "cta--primary" : ""}">${c}</button>`).join("")}
-        </div>
-
-        <p class="predict__note">${p.note}</p>
+        <p class="flowc__note">${f.note} · 업데이트 ${f.updatedAgo}</p>
       </section>`;
   }
 
@@ -138,17 +170,18 @@
 
       <div class="handoff">
         <span class="handoff__line"></span>
-        <span class="handoff__txt">이 이슈, 다음엔 어떻게 될까요?</span>
+        <span class="handoff__txt">이 기사, 다음엔 어떻게 될까요?</span>
         <span class="handoff__line"></span>
       </div>
 
-      ${renderPredict(a.predict)}
+      ${renderFlow(a.flow)}
     `;
 
     // 막대 채우기 애니메이션 (렌더 직후 다음 프레임에서 width 적용)
     requestAnimationFrame(() => {
-      const fill = articleEl.querySelector(".predict__fill");
-      if (fill) fill.style.width = fill.dataset.w + "%";
+      articleEl.querySelectorAll(".poll__fill").forEach((el) => {
+        el.style.width = el.dataset.w + "%";
+      });
     });
   }
 

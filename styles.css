@@ -233,8 +233,8 @@ body {
 .handoff__line { flex: 1; height: 1px; background: var(--line); }
 .handoff__txt { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
 
-/* ── 「다음엔?」 예측 카드 ── */
-.predict {
+/* ── 「다음엔?」 흐름 카드 ── */
+.flowc {
   border-radius: var(--radius);
   padding: 18px 16px 16px;
   background: linear-gradient(180deg, #f7f9ff, #ffffff);
@@ -244,16 +244,16 @@ body {
 .tone--sports { background: linear-gradient(180deg, #f3fbf7, #fff); border-color: #d7f0e3; }
 .tone--legal { background: linear-gradient(180deg, #f9f5ff, #fff); border-color: #ece1fa; }
 
-.predict__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.predict__logo {
+.flowc__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.flowc__logo {
   font-size: 15px;
   font-weight: 800;
   color: var(--accent);
   letter-spacing: -0.3px;
 }
-.tone--sports .predict__logo { color: var(--high); }
-.tone--legal .predict__logo { color: #8a55d6; }
-.predict__tag {
+.tone--sports .flowc__logo { color: var(--high); }
+.tone--legal .flowc__logo { color: #8a55d6; }
+.flowc__tag {
   font-size: 10.5px;
   font-weight: 700;
   color: var(--ink-2);
@@ -263,128 +263,164 @@ body {
   border-radius: 999px;
 }
 
-.predict__q {
-  font-size: 17px;
+.flowc__q {
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.4;
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   letter-spacing: -0.3px;
 }
 
-/* 게이지 */
-.predict__gauge { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.predict__num {
-  font-weight: 800;
-  line-height: 1;
+/* 현재 흐름(자연어 전망) — 히어로. 확률은 보조로 작게 */
+.flowc__current {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px 14px;
+  margin-bottom: 14px;
+}
+.flowc__dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.flowc__current.is-high .flowc__dot { background: var(--high); }
+.flowc__current.is-mid .flowc__dot { background: var(--mid); }
+.flowc__current.is-low .flowc__dot { background: var(--low); }
+.flowc__current-body { flex: 1; }
+.flowc__current-lab { font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.flowc__current-txt { font-size: 16px; font-weight: 800; margin: 2px 0 0; letter-spacing: -0.3px; }
+.flowc__current.is-high .flowc__current-txt { color: #15835a; }
+.flowc__current.is-mid .flowc__current-txt { color: #b06f0e; }
+.flowc__current.is-low .flowc__current-txt { color: #4b5563; }
+.flowc__ai {
+  font-size: 11px;
+  color: var(--ink-2);
+  background: #f1f4f9;
+  border-radius: 999px;
+  padding: 5px 9px;
   white-space: nowrap;
 }
-.predict__num strong { font-size: 40px; }
-.predict__num span { font-size: 18px; margin-left: 2px; }
-.predict__num.is-high { color: var(--high); }
-.predict__num.is-mid { color: var(--mid); }
-.predict__num.is-low { color: var(--low); }
-
-.predict__bar { flex: 1; }
-.predict__label { font-size: 12px; font-weight: 700; color: var(--ink-2); }
-.predict__track {
-  height: 10px;
-  background: #e9edf4;
-  border-radius: 999px;
-  overflow: hidden;
-  margin: 6px 0 6px;
-}
-.predict__fill {
-  height: 100%;
-  width: 0;
-  border-radius: 999px;
-  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.predict__fill.is-high { background: linear-gradient(90deg, #22b277, #1e9e6a); }
-.predict__fill.is-mid { background: linear-gradient(90deg, #f0a83a, #d98a17); }
-.predict__fill.is-low { background: linear-gradient(90deg, #9aa3b2, #6b7280); }
-.predict__updated { font-size: 10.5px; color: var(--ink-2); }
+.flowc__ai b { font-weight: 800; color: var(--ink); }
 
 /* 민감 이슈 디스클레이머 */
-.predict__disclaimer {
+.flowc__disc {
   background: #fff7ed;
   border: 1px solid #ffe2bd;
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 14px;
 }
-.predict__disclaimer-tag { font-size: 11.5px; font-weight: 800; color: #b5710c; }
-.predict__disclaimer ul { margin: 6px 0 0; padding-left: 16px; }
-.predict__disclaimer li { font-size: 11.5px; color: #8a6526; margin-bottom: 2px; }
+.flowc__disc-tag { font-size: 11.5px; font-weight: 800; color: #b5710c; }
+.flowc__disc ul { margin: 6px 0 0; padding-left: 16px; }
+.flowc__disc li { font-size: 11.5px; color: #8a6526; margin-bottom: 2px; }
 
-/* 근거 / 변수 2열 */
-.predict__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.predict__col {
+/* 좋게 볼 점 / 걸리는 점 */
+.flowc__view { margin-bottom: 14px; }
+.flowc__view-row {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 11px 12px;
+  margin-bottom: 8px;
 }
-.predict__col h4,
-.predict__counter h4,
-.predict__logwrap h4 {
-  font-size: 12.5px;
-  font-weight: 800;
-  margin: 0 0 8px;
-}
-.predict__col ul { margin: 0; padding-left: 16px; }
-.predict__col li { font-size: 12px; color: #3a4150; margin-bottom: 5px; }
+.flowc__view-row p { font-size: 13px; color: #2b2f38; margin: 5px 0 0; }
+.flowc__view-lab { font-size: 12px; font-weight: 800; }
+.flowc__view-row.is-pro .flowc__view-lab { color: #15835a; }
+.flowc__view-row.is-con .flowc__view-lab { color: #b06f0e; }
 
-.predict__counter {
+/* 다음 체크포인트 */
+.flowc__check { margin-bottom: 16px; }
+.flowc h4 { font-size: 12.5px; font-weight: 800; margin: 0 0 8px; }
+.flowc__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.flowc__chip {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3a4150;
   background: #fff;
-  border: 1px dashed #cfd6e2;
-  border-radius: 12px;
-  padding: 11px 12px;
-  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 11px;
 }
-.predict__counter ul { margin: 0; padding-left: 16px; }
-.predict__counter li { font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
 
-/* 업데이트 로그 막대 */
-.predict__logwrap { margin-bottom: 16px; }
-.predict__log {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  height: 84px;
-  padding: 8px 6px 0;
+/* 독자 전망 (구조화된 선택형 참여) */
+.flowc__poll {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
+  padding: 12px 13px;
+  margin-bottom: 16px;
 }
-.logbar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
+.poll__sent { font-size: 12.5px; color: var(--ink-2); margin: 0 0 10px; }
+.poll__row { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.poll__name { font-size: 12px; color: var(--ink); width: 92px; flex-shrink: 0; }
+.poll__track { flex: 1; height: 9px; background: #eef1f6; border-radius: 999px; overflow: hidden; }
+.poll__fill {
+  display: block;
   height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: #c8d3e6;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.poll__fill.is-lead { background: var(--accent); }
+.tone--sports .poll__fill.is-lead { background: var(--high); }
+.tone--legal .poll__fill.is-lead { background: #8a55d6; }
+.poll__pct { font-size: 12px; font-weight: 800; width: 34px; text-align: right; }
+.poll__total { font-size: 11px; color: #9aa3b2; margin: 9px 0 0; }
+
+/* 흐름 업데이트 (텍스트 타임라인) */
+.flowc__updates { margin-bottom: 16px; }
+.upd {
+  border-left: 2px solid #dbe3f0;
+  padding: 0 0 10px 12px;
   position: relative;
 }
-.logbar__fill {
-  width: 70%;
-  background: #c8d3e6;
-  border-radius: 6px 6px 0 0;
-  transition: height 0.6s ease;
+.upd:last-child { padding-bottom: 0; }
+.upd::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
 }
-.logbar.is-now .logbar__fill { background: var(--accent); }
-.tone--sports .logbar.is-now .logbar__fill { background: var(--high); }
-.tone--legal .logbar.is-now .logbar__fill { background: #8a55d6; }
-.logbar__val { font-size: 10.5px; font-weight: 700; color: var(--ink-2); margin-bottom: 3px; }
-.logbar.is-now .logbar__val { color: var(--ink); }
-.logbar__date { font-size: 10px; color: #9aa3b2; margin-top: 4px; }
+.tone--sports .upd::before { background: var(--high); }
+.tone--legal .upd::before { background: #8a55d6; }
+.upd__time { font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.upd__text { font-size: 13px; color: #2b2f38; margin: 3px 0 0; }
+
+/* 이 흐름 더 보기 (관련 흐름) */
+.flowc__related { margin-bottom: 16px; }
+.rel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.rel:hover { border-color: var(--accent); }
+.rel__tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: #eef3ff;
+  border-radius: 6px;
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+.tone--sports .rel__tag { color: var(--high); background: #e7f6ef; }
+.tone--legal .rel__tag { color: #8a55d6; background: #f3ecfc; }
+.rel__text { font-size: 13px; color: #2b2f38; }
 
 /* CTA */
-.predict__cta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.flowc__cta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
 .cta {
   border: 1px solid #d6deec;
   background: #fff;
@@ -406,7 +442,7 @@ body {
 .tone--legal .cta--primary { background: #8a55d6; border-color: #8a55d6; }
 .cta--primary:hover { color: #fff; opacity: 0.92; }
 
-.predict__note {
+.flowc__note {
   font-size: 11px;
   color: var(--ink-2);
   margin: 0;
