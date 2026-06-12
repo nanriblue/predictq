@@ -100,20 +100,40 @@
       </section>`;
   }
 
+  // 다음 기사뷰의 표정(감정) 리액션 바
+  function renderEmotions(emotions) {
+    return `<div class="article__reactions">${emotions
+      .map(
+        (e) => `
+        <button class="emo">
+          <span class="emo__face">${e.emoji}</span>
+          <span class="emo__label">${e.label}</span>
+          <span class="emo__count">${fmt(e.count)}</span>
+        </button>`
+      )
+      .join("")}</div>`;
+  }
+
   function renderArticle(a) {
     articleEl.innerHTML = `
+      <div class="article__press">
+        <span class="press__logo ${a.categoryClass}">${a.press.charAt(0)}</span>
+        <span class="press__name">${a.press}</span>
+        <button class="press__sub">+ 구독</button>
+      </div>
       <span class="article__cat ${a.categoryClass}">${a.category}</span>
       <h2 class="article__title">${a.title}</h2>
       <div class="article__meta">
-        <span>${a.source}</span><span>·</span><span>${a.date}</span>
+        <span>${a.reporter}</span><span>·</span><span>입력 ${a.date}</span>
       </div>
       <div class="article__photo">📷 기사 이미지</div>
       ${a.body.map((p) => `<p class="article__p">${p}</p>`).join("")}
 
-      <div class="article__feedback">
-        <button class="fb"><span>👍</span> 추천 ${fmt(a.reactions.up)}</button>
-        <button class="fb"><span>💬</span> 댓글 ${fmt(a.reactions.comment)}</button>
-        <button class="fb"><span>🔖</span> 저장</button>
+      ${renderEmotions(a.emotions)}
+
+      <div class="article__commentbar">
+        <span><b>💬 댓글</b> ${fmt(a.comment)}</span>
+        <span class="article__commentbar-icons">🔗 공유 · Aa 글씨</span>
       </div>
 
       <div class="handoff">

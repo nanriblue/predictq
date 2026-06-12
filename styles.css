@@ -153,26 +153,75 @@ body {
   margin: 0 0 14px;
 }
 
-/* ── 기사 하단 피드백 ── */
-.article__feedback {
+/* ── 언론사 헤더 (다음 기사뷰 상단) ── */
+.article__press {
   display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  padding: 8px 0 14px;
 }
-.fb {
-  flex: 1;
-  border: 1px solid var(--line);
+.press__logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.press__name { font-size: 13.5px; font-weight: 700; }
+.press__sub {
+  margin-left: auto;
+  border: 1px solid #d6deec;
   background: #fff;
-  border-radius: 10px;
-  padding: 9px 0;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
   cursor: pointer;
 }
-.fb span { font-size: 14px; }
+
+/* ── 표정(감정) 리액션 바 (다음 기사뷰) ── */
+.article__reactions {
+  display: flex;
+  gap: 6px;
+  padding: 16px 0 12px;
+  border-top: 1px solid var(--line);
+}
+.emo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 9px 2px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.emo:hover { border-color: var(--accent); }
+.emo__face { font-size: 19px; line-height: 1; }
+.emo__label { font-size: 10px; color: var(--ink-2); }
+.emo__count { font-size: 11px; font-weight: 700; color: var(--ink); }
+
+/* ── 댓글 바 ── */
+.article__commentbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.article__commentbar b { font-weight: 700; color: var(--ink); }
+.article__commentbar-icons { font-size: 12px; }
 
 /* ── "이 이슈 어떻게 될까?" 핸드오프 ── */
 .handoff {
