@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>다음엔? 캡처</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* 캡처용: 전체 카드가 잘리지 않게 스크롤 제약 해제 + 애니메이션 정지 */
+    * { transition: none !important; animation: none !important; }
+    body { background: #eef1f6; margin: 0; }
+    .stage { max-width: 412px; padding: 14px 14px 20px; }
+    .intro, .switcher, .credit { display: none; }
+    .article { max-height: none !important; overflow: visible !important; }
+    .phone { max-width: 412px; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <nav class="switcher">
+      <button class="switcher__btn is-active" data-index="0">경제</button>
+      <button class="switcher__btn" data-index="1">스포츠</button>
+      <button class="switcher__btn" data-index="2">연예</button>
+    </nav>
+    <div class="phone">
+      <div class="phone__bar">
+        <span class="phone__time">9:41</span>
+        <span class="phone__brand">Daum</span>
+        <span class="phone__icons">▮▮▮ ▮</span>
+      </div>
+      <main class="article" id="article"></main>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // ?i=0/1/2 기사 선택 후, VS 막대를 즉시 채워 캡처 준비
+    (function () {
+      var i = parseInt(new URLSearchParams(location.search).get("i") || "0", 10);
+      var btns = document.querySelectorAll(".switcher__btn");
+      if (btns[i]) btns[i].click();
+      setTimeout(function () {
+        document.querySelectorAll(".dn__vsseg").forEach(function (s) {
+          if (s.dataset.w) s.style.width = s.dataset.w + "%";
+        });
+      }, 120);
+    })();
+  </script>
+</body>
+</html>
