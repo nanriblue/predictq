@@ -33,7 +33,7 @@
     const r = f.resolved;
     return `
       <div class="dn__resolved">
-        <div class="dn__resolved-badge">🏁 예측 결과가 나왔어요</div>
+        <div class="dn__resolved-badge">🏁 전망 결과가 나왔어요</div>
         <p class="dn__resolved-outcome">${r.outcome}</p>
         <ul class="dn__resolved-list">
           <li><span>AI 전망</span><b>${r.ai}</b></li>
@@ -52,7 +52,7 @@
         <div class="dn__head">
           <span class="dn__logo">다음엔?</span>
           <span class="dn__tag">이 이슈의 다음 흐름</span>
-          <button class="dn__settle" type="button">🏁 결과 정산 미리보기</button>
+          <button class="dn__settle" type="button">전망 결과 보기</button>
         </div>
 
         <h3 class="dn__q">${f.question}</h3>
@@ -200,7 +200,7 @@
     const settle = card.querySelector(".dn__settle");
     settle.addEventListener("click", () => {
       const on = card.classList.toggle("show-resolved");
-      settle.textContent = on ? "↩ 진행 중 보기" : "🏁 결과 정산 미리보기";
+      settle.textContent = on ? "← 전망 카드로" : "전망 결과 보기";
     });
   }
 
