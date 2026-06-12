@@ -27,7 +27,7 @@
       return `
         <div class="dn__resolved">
           <div class="dn__resolved-badge dn__resolved-badge--wait">⏳ 아직 결과가 확정되지 않았어요</div>
-          <p class="dn__resolved-msg">선고·발표 등 결과가 확인되면 이 자리에서 정산 결과를 알려드려요.</p>
+          <p class="dn__resolved-msg">선고·발표 등 결과가 확인되면 이 자리에서 전망 결과를 알려드려요.</p>
         </div>`;
     }
     const r = f.resolved;
